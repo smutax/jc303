@@ -26,7 +26,7 @@ jobs:
     - name: Checkout Private VST2 SDK
       uses: actions/checkout@v4
       with:
-        repository: smutax/vst24-sdk
+        repository: smutax/vst2_Juice_build
         token: \${{ secrets.VST_SDK_TOKEN }}
         path: vstsdk2 # Saves it into a folder named 'vstsdk2' inside the workspace
 
