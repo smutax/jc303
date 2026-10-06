@@ -30,18 +30,24 @@ jobs:
         token: ${{ secrets.VST_SDK_TOKEN }}
         path: vstsdk2 
 
-        # 4. Setup CMake build environment
+    # 4. Setup CMake build environment (Activating VST2 explicitly)
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF -Djuce_vst2_sdk_path="${{ github.workspace }}/vstsdk2"
+      run: |
+        cmake -B build `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF `
+          -Djuce_vst2_sdk_path="${{ github.workspace }}/vstsdk2" `
+          -DJUCE_BUILD_FORMATS_VST=ON
 
-        # 5. Build the VST2 binary target
+    # 5. Build only the explicit VST2 binary target
     - name: Build VST2 Plugin
-      run: cmake --build build --config Release
+      run: cmake --build build --config Release --target jc303_VST
 
-        # 6. Extract and upload the compiled .dll file
+    # 6. Extract and upload the real VST2 .dll file
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: jc303-windows-vst2
-        path: build/**/jc303.dll
+        path: build/jc303_artefacts/Release/VST/jc303.dll
+
 
