@@ -38,9 +38,14 @@ jobs:
     - name: Build VST2 Plugin
       run: cmake --build build --config Release --target jc303
 
-    # 6. Extract and upload the real VST2 .dll file using a wildcard scan
+    # 6. Extract and upload the real VST2 .dll file safely
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: jc303-windows-vst2
-        path: build/**/VST/jc303.dll
+        path: |
+          build/jc303_artefacts/Release/jc303.dll
+          build/jc303_artefacts/Release/VST/jc303.dll
+          build/Release/jc303.dll
+        if-no-files-found: error
+
