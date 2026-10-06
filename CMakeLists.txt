@@ -80,7 +80,7 @@ add_subdirectory(src/gui/${GUI})
 # do we have vst2 sdk to build it?
 if(EXISTS "${PROJECT_SOURCE_DIR}/vstsdk2.4")
     juce_set_vst2_sdk_path("${PROJECT_SOURCE_DIR}/vstsdk2.4")
-    set(PLUGIN_FORMATS AU VST VST3 LV2)
+    set(PLUGIN_FORMATS AU VST VST3 LV2 VST2)
 else()
     set(PLUGIN_FORMATS AU VST3 LV2)
 endif()
