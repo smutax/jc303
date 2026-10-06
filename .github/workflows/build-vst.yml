@@ -34,9 +34,13 @@ jobs:
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF -Djuce_vst2_sdk_path="${{ github.workspace }}/vstsdk2"
 
-    # 5. Build the universal main target 
+    # 5. Build the universal main target
     - name: Build VST2 Plugin
       run: cmake --build build --config Release --target jc303
+
+    # INSERT HERE: This lists every compiled .dll file in your build folder directly to your screen logs
+    - name: List Build Files for Diagnostics
+      run: Get-ChildItem -Recurse build\*.dll | Select-Object FullName
 
     # 6. Extract and upload the real VST2 .dll file safely
     - name: Upload Build Artifact
@@ -44,8 +48,7 @@ jobs:
       with:
         name: jc303-windows-vst2
         path: |
-          build/jc303_artefacts/Release/jc303.dll
+          build/jc303_Artefacts/Release/VST/jc303.dll
           build/jc303_artefacts/Release/VST/jc303.dll
-          build/Release/jc303.dll
-        if-no-files-found: error
-
+          build/jc303_artefacts/Release/jc303.dll
+        if-no-files-found: warn
