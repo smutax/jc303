@@ -22,7 +22,7 @@ jobs:
         git config --global url."https://github.com".insteadOf "git@github.com:"
         git submodule update --init --recursive
 
-    # 3. Checkout your private VST2 SDK
+    # 3. Checkout your private VST2 SDK (NO BACKSLASH HERE)
     - name: Checkout Private VST2 SDK
       uses: actions/checkout@v4
       with:
@@ -35,7 +35,7 @@ jobs:
       shell: pwsh
       run: |
        $path = "CMakeLists.txt"
-       $content = Get-Content path -Raw
+        content = Get-Content path -Raw
         if (\$content -match "set\(PLUGIN_FORMATS") {
             \$content = \$content -replace "set\(PLUGIN_FORMATS (.*?)\)", 'set(PLUGIN_FORMATS \$1 VST2)'
             Set-Content -Path path -Value content
@@ -73,7 +73,8 @@ jobs:
       with:
         name: jc303-windows-vst2
         path: |
+          build/JC303_artefacts/Release/VST/jc303.dll
           build/JC303_artefacts/Release/VST/JC303.dll
+          build/JC303_artefacts/Release/jc303.dll
           build/JC303_artefacts/Release/JC303.dll
         if-no-files-found: warn
-        
