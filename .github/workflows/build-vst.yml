@@ -27,42 +27,53 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: smutax/vst2_Juice_build
-        token: ${{ secrets.VST_SDK_TOKEN }}
+        token: \${{ secrets.VST_SDK_TOKEN }}
         path: vstsdk2 
 
     # 4. FORCE VST2 format activation by cleanly appending it to the format list variable
     - name: Inject VST2 into CMakeLists
       shell: pwsh
       run: |
-        $path = "CMakeLists.txt"
-        $content = Get-Content $path -Raw
-        # Look for the exact line defining the formats list and add VST2 to the end of it
-        if ($content -match "set\(PLUGIN_FORMATS") {
-            $content = $content -replace "set\(PLUGIN_FORMATS (.*?)\)", 'set(PLUGIN_FORMATS $1 VST2)'
-            Set-Content -Path $path -Value $content
+        \$path = "CMakeLists.txt"
+        content = Get-Content path -Raw
+        if (\$content -match "set\(PLUGIN_FORMATS") {
+            \$content = \$content -replace "set\(PLUGIN_FORMATS (.*?)\)", 'set(PLUGIN_FORMATS \$1 VST2)'
+            Set-Content -Path path -Value content
             Write-Host "Successfully appended VST2 to PLUGIN_FORMATS variable!"
         } else {
             Write-Host "Warning: PLUGIN_FORMATS definition block not found!"
         }
 
-    # 5. Setup CMake build environment
-    - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF -Djuce_vst2_sdk_path="${{ github.workspace }}/vstsdk2"
+    # 5. Mirror the VST SDK to standard JUCE fallback locations so the build engine detects it
+    - name: Setup VST SDK Global Paths
+      run: |
+        mkdir -p C:\SDKs\vstsdk2.4\pluginterfaces\vst2.x
+        cp -r vstsdk2/pluginterfaces/vst2.x/* C:\SDKs\vstsdk2.4\pluginterfaces\vst2.x/
 
-    # 6. Build the universal code base
+    # 6. Setup CMake build environment targeting the absolute explicit paths
+    - name: Configure CMake
+      run: |
+        cmake -B build `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF `
+          -Djuce_vst2_sdk_path="C:\SDKs\vstsdk2.4" `
+          -DJUCE_BUILD_VST2=ON
+
+    # 7. Build the universal code base
     - name: Build VST2 Plugin
       run: cmake --build build --config Release
 
-    # 7. Print all generated .dll files to verify the output path
+    # 8. Print all generated .dll files to verify the output path
     - name: List Build Files for Diagnostics
       run: Get-ChildItem -Recurse build\*.dll | Select-Object FullName
 
-    # 8. Dynamic scan upload matching only the true VST2 standalone file
+    # 9. Dynamic scan upload matching only the true VST2 standalone file
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: jc303-windows-vst2
         path: |
-          build/**/Release/VST/jc303.dll
-          build/**/Release/jc303.dll
+          build/JC303_artefacts/Release/VST/JC303.dll
+          build/JC303_artefacts/Release/JC303.dll
         if-no-files-found: warn
+        
