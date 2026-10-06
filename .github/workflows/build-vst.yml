@@ -5,32 +5,32 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allows you to trigger the build manually from the Actions tab
-  
-# ADD THIS: Grants the default token permission to read the code and submodules
-permissions:
-  contents: read
-  
+  workflow_dispatch:
+
 jobs:
   build-windows:
     runs-on: windows-latest
 
     steps:
-    # 1. Checkout the cloned jc303 code base
+    # 1. Checkout the main JC303 code base using the standard safe method
     - name: Checkout JC303 Repo
       uses: actions/checkout@v4
-      with:
-        submodules: 'recursive' # Ensures JUCE and other dependencies are pulled
 
-    # 2. Checkout your private VST2 SDK using the PAT secret
+    # 2. Initialize submodules safely by rewriting SSH URLs to HTTPS automatically
+    - name: Initialize Submodules
+      run: |
+        git config --global url."https://github.com".insteadOf "git@github.com:"
+        git submodule update --init --recursive
+
+    # 3. Checkout your private VST2 SDK using your token
     - name: Checkout Private VST2 SDK
       uses: actions/checkout@v4
       with:
         repository: smutax/vst2_Juice_build
         token: \${{ secrets.VST_SDK_TOKEN }}
-        path: vstsdk2 # Saves it into a folder named 'vstsdk2' inside the workspace
+        path: vstsdk2 
 
-    # 3. Setup CMake build environment
+    # 4. Setup CMake build environment
     - name: Configure CMake
       run: |
         cmake -B build -G "Visual Studio 17 2022" -A x64 `
@@ -38,11 +38,11 @@ jobs:
           -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF `
           -Djuce_vst2_sdk_path="\${{ github.workspace }}/vstsdk2"
 
-    # 4. Build the VST2 binary target
+    # 5. Build the VST2 binary target
     - name: Build VST2 Plugin
       run: cmake --build build --config Release --target jc303_VST
 
-    # 5. Extract and upload the compiled .dll file
+    # 6. Extract and upload the compiled .dll file
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
