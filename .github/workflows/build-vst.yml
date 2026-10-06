@@ -27,7 +27,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: smutax/vst2_Juice_build
-        token: \${{ secrets.VST_SDK_TOKEN }}
+        token: ${{ secrets.VST_SDK_TOKEN }}
         path: vstsdk2 
 
     # 4. Setup CMake build environment
