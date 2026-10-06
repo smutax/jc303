@@ -6,7 +6,11 @@ on:
   pull_request:
     branches: [ main, master ]
   workflow_dispatch: # Allows you to trigger the build manually from the Actions tab
-
+  
+# ADD THIS: Grants the default token permission to read the code and submodules
+permissions:
+  contents: read
+  
 jobs:
   build-windows:
     runs-on: windows-latest
