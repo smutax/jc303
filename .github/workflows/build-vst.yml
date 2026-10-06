@@ -12,17 +12,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1. Checkout the main JC303 code base using the standard safe method
+    # 1. Checkout the main JC303 code base
     - name: Checkout JC303 Repo
       uses: actions/checkout@v4
 
-    # 2. Initialize submodules safely by rewriting SSH URLs to HTTPS automatically
+    # 2. Initialize submodules safely
     - name: Initialize Submodules
       run: |
-        git config --global url."https://github.com".insteadOf "git@github.com:"
+        git config --global url."https://github.com/".insteadOf "git@github.com:"
         git submodule update --init --recursive
 
-    # 3. Checkout your private VST2 SDK using your token
+    # 3. Checkout your private VST2 SDK
     - name: Checkout Private VST2 SDK
       uses: actions/checkout@v4
       with:
@@ -30,25 +30,37 @@ jobs:
         token: ${{ secrets.VST_SDK_TOKEN }}
         path: vstsdk2 
 
-    # 4. Setup CMake build environment (Providing the VST2 path safely)
+    # 4. FORCE VST2 format activation inside the project configuration
+    - name: Inject VST2 into CMakeLists
+      shell: pwsh
+      run: |
+        $path = "CMakeLists.txt"
+        $content = Get-Content $path -Raw
+        # Safely force VST2 format alongside whatever formats they have enabled
+        if ($content -match "FORMATS") {
+            $content = $content -replace "FORMATS", "FORMATS VST2"
+            Set-Content -Path $path -Value $content
+            Write-Host "Successfully injected VST2 format flag into CMakeLists.txt"
+        } else {
+            Write-Host "Warning: FORMATS block not found in root CMakeLists.txt"
+        }
+
+    # 5. Setup CMake build environment
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DJUCE_COPY_PLUGIN_AFTER_BUILD=OFF -Djuce_vst2_sdk_path="${{ github.workspace }}/vstsdk2"
 
-    # 5. Build the universal main target
+    # 6. Build the universal code base
     - name: Build VST2 Plugin
-      run: cmake --build build --config Release --target jc303
+      run: cmake --build build --config Release
 
-    # INSERT HERE: This lists every compiled .dll file in your build folder directly to your screen logs
+    # 7. Print all generated .dll files to easily track down the true VST2 location
     - name: List Build Files for Diagnostics
       run: Get-ChildItem -Recurse build\*.dll | Select-Object FullName
 
-    # 6. Extract and upload the real VST2 .dll file safely
+    # 8. Dynamic scan upload matching only the true VST2 standalone file
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: jc303-windows-vst2
-        path: |
-          build/jc303_Artefacts/Release/VST/jc303.dll
-          build/jc303_artefacts/Release/VST/jc303.dll
-          build/jc303_artefacts/Release/jc303.dll
-        if-no-files-found: warn
+        path: build/**/Release/jc303.dll
+        if-no-files-found: error
