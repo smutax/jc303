@@ -35,7 +35,7 @@ jobs:
       shell: pwsh
       run: |
        $path = "CMakeLists.txt"
-        content = Get-Content path -Raw
+       $content = Get-Content path -Raw
         if (\$content -match "set\(PLUGIN_FORMATS") {
             \$content = \$content -replace "set\(PLUGIN_FORMATS (.*?)\)", 'set(PLUGIN_FORMATS \$1 VST2)'
             Set-Content -Path path -Value content
